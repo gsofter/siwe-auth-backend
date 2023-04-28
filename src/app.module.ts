@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
-
-import { UsersModule } from './user/user.module';
-
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import { UsersModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -13,6 +12,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    ConfigModule.forRoot(),
   ],
 })
 export class AppModule {}

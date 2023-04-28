@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Request, Logger, Res } from '@nestjs/common';
 import { Response } from 'express';
+import { QueryFailedError } from 'typeorm';
+import * as jwt from 'jsonwebtoken';
 
 // ** import internal dependencies
 import { UserService } from './user.service';
@@ -65,25 +67,24 @@ export class UsersController {
 
       const newUserDto: UserDTO = {
         username: req.body.username,
-        eoaAddress: req.body.eoaAddress,
+        eoaAddress: ethers.getAddress(req.body.eoaAddress),
       };
 
-      const newUser = await this.userService.insertOne(newUserDto).catch(() => {
-        throw new Error('internal server error');
-      });
+      const newUser = await this.userService.insertOne(newUserDto);
 
       res.status(201).json({
         userId: newUser.id,
       });
     } catch (e) {
+      if (e instanceof QueryFailedError) {
+        return res.status(500).json({
+          message: 'user already exist',
+        });
+      }
+
       switch (e.message) {
         case 'signature verification failed':
           return res.status(401).json({
-            message: 'signature verification faild',
-          });
-
-        case 'internal server error':
-          return res.status(500).json({
             message: 'signature verification faild',
           });
 
@@ -107,16 +108,17 @@ export class UsersController {
       return res.status(422).json({ message: 'Expected signature as body.' });
     }
 
-    if (!req.body.username || !req.body.eoaAddress) {
-      return res.status(400).json({ message: 'Missing required information.' });
+    if (!req.body.eoaAddress) {
+      return res.status(422).json({ message: 'Missing required information.' });
     }
 
     try {
-      const parsedMessage = await this.siweService.verifyMessage(
-        req.body.message,
-        req.body.signature,
-        req.session.nonce,
-      );
+      const parsedMessage = await this.siweService
+        .verifyMessage(req.body.message, req.body.signature, req.body.nonce)
+        .catch((e) => {
+          console.log(e.message);
+          throw e;
+        });
 
       if (
         ethers.getAddress(parsedMessage.address) !==
@@ -125,12 +127,29 @@ export class UsersController {
         return res.status(401).json({ message: 'Authentication failed.' });
       }
 
+      const loggedUser = await this.userService.getOneByEOAAddress(
+        ethers.getAddress(req.body.eoaAddress),
+      );
+
+      if (!loggedUser)
+        return res.status(401).json({ message: 'Authentication failed.' });
+
       // TODO: generate jwt auth token
+      const jwtToken = jwt.sign(
+        {
+          eoaAddress: loggedUser.eoaAddress,
+        },
+        process.env.JWT_SECRET_KEY,
+        {
+          expiresIn: '1d',
+        },
+      );
 
       res.status(200).json({
-        message: 'login success',
+        access_token: jwtToken,
       });
     } catch (e) {
+      console.log(e.message);
       res.status(401).json({
         message: 'signature verification faild',
       });

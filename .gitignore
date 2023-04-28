@@ -36,3 +36,6 @@ lerna-debug.log*
 
 # db files
 siwe-db
+
+# env files
+.env
