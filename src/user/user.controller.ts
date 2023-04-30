@@ -1,13 +1,23 @@
-import { Controller, Get, Post, Request, Logger, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Request,
+  Logger,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { QueryFailedError } from 'typeorm';
-import * as jwt from 'jsonwebtoken';
 
 // ** import internal dependencies
 import { UserService } from './user.service';
 import { SiweService } from 'src/siwe/siwe.service';
 import { UserDTO } from './user.dto';
 import { ethers } from 'ethers';
+
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('user')
 export class UsersController {
@@ -16,6 +26,7 @@ export class UsersController {
   constructor(
     private readonly userService: UserService,
     private readonly siweService: SiweService,
+    private readonly jwtService: JwtService,
   ) {}
   @Get('/nonce')
   async getNonce(@Request() req, @Res() res) {
@@ -23,11 +34,6 @@ export class UsersController {
     this.logger.verbose('nonce', nonce);
 
     res.status(200).json({ nonce });
-  }
-
-  @Get('/profile')
-  async getProfile() {
-    return;
   }
 
   @Post('/signup')
@@ -134,13 +140,12 @@ export class UsersController {
       if (!loggedUser)
         return res.status(401).json({ message: 'Authentication failed.' });
 
-      // TODO: generate jwt auth token
-      const jwtToken = jwt.sign(
+      const jwtToken = this.jwtService.sign(
         {
           eoaAddress: loggedUser.eoaAddress,
         },
-        process.env.JWT_SECRET_KEY,
         {
+          secret: process.env.JWT_SECRET_KEY,
           expiresIn: '1d',
         },
       );
@@ -149,10 +154,20 @@ export class UsersController {
         access_token: jwtToken,
       });
     } catch (e) {
-      console.log(e.message);
       res.status(401).json({
         message: 'signature verification faild',
       });
     }
+  }
+
+  @Get('/profile')
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@Request() req, @Res() res: Response) {
+    const userDto: UserDTO = {
+      username: req.user.username,
+      eoaAddress: req.user.eoaAddress,
+    };
+
+    return res.status(200).json(userDto);
   }
 }

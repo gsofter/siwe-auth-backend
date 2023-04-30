@@ -11,8 +11,6 @@ export class SiweService {
   async verifyMessage(pMessage: string, signature: string, nonce: string) {
     const SIWEObject = new SiweMessage(pMessage);
 
-    console.log('SIWEObject => ', SIWEObject);
-
     const { data: message } = await SIWEObject.verify({
       signature: signature,
       nonce: nonce,

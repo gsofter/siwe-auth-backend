@@ -1,14 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
+let allowedList = [];
+if (process.env.ALLOW_LIST) allowedList = process.env.ALLOW_LIST.split(',');
+
+if (allowedList.length === 0) allowedList.push('http://localhost:3000');
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // if (process.env.NODE_ENV === 'development')
   app.enableCors({
-    allowedHeaders: ['content-type'],
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
-    credentials: true,
+    origin: ['http://localhost:3000', '*'],
   });
 
   await app.listen(3002);
