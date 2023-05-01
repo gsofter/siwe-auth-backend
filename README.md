@@ -1,11 +1,19 @@
 # SIWE AUTH
+
 <p align="center">
   This projected was bootstraped with [Nestjs](http://nestjs.com)
 </p>
 
 ## Getting started
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Prerequisites
+
+To run the app on your local, you would need to setup followings before running the server.
+
+- [Node.js > 16.17.1](https://nodejs.org/en)
+- [Yarn](https://yarnpkg.com/getting-started)
+- [Redis](https://redis.io/docs/getting-started/)
+  - You can either create redis server on your local or use redis services. [Upstash](https://upstash.com/) is highly recommended to use free redis version.
 
 ### Installation
 
@@ -15,11 +23,13 @@ $ yarn install
 
 ### Configure environment
 
-Clone `.env.example` to `.env` and configure environment variables.
+Clone `.env.example` to `.env` and configure following environment variables.
+
 ```
 ALLOW_LIST=<ALLOW_ORIGIN_LIST>
 JWT_SECRET_KEY=<YOUR_JWT_SECRET_KEY>
-PORT=<YOUR_HOST_PORT>
+PORT=<YOUR_SERVER_PORT>
+REDIS_SERVER_URL=<REDIS_URL>
 ```
 
 ### Running the app
@@ -48,12 +58,11 @@ $ yarn run test:e2e
 $ yarn run test:cov
 ```
 
-## Stay in touch
+## Tech Stacks
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+- Used [NestJS](https://docs.nestjs.com/) as the web framework
+- Used [SQLite](https://www.npmjs.com/package/sqlite3) as the database engine
+- Used [TypeORM](https://typeorm.io/) as database ORM framework
+- Used [SIWE](https://docs.login.xyz/sign-in-with-ethereum/quickstart-guide) protocol for authentication
+- Used [Passport-JWT](https://docs.nestjs.com/recipes/passport#implementing-passport-jwt) to authenticate private endpoints
+- Used [ioredis](https://www.npmjs.com/package/ioredis) to manage redis
