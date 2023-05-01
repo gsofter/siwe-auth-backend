@@ -6,6 +6,8 @@ if (process.env.ALLOW_LIST) allowedList = process.env.ALLOW_LIST.split(',');
 
 if (allowedList.length === 0) allowedList.push('http://localhost:3000');
 
+console.log('allowedList => ', allowedList);
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
