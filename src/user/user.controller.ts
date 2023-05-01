@@ -78,8 +78,18 @@ export class UsersController {
 
       const newUser = await this.userService.insertOne(newUserDto);
 
-      res.status(201).json({
-        userId: newUser.id,
+      const jwtToken = this.jwtService.sign(
+        {
+          eoaAddress: newUser.eoaAddress,
+        },
+        {
+          secret: process.env.JWT_SECRET_KEY,
+          expiresIn: '1d',
+        },
+      );
+
+      res.status(200).json({
+        access_token: jwtToken,
       });
     } catch (e) {
       if (e instanceof QueryFailedError) {
