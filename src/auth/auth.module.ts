@@ -5,6 +5,8 @@ import { UserService } from 'src/user/user.service';
 import { JwtStrategy } from './jwt-auth.strategy';
 import { User } from 'src/user/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { SiweService } from 'src/siwe/siwe.service';
+import { SiweAuthStrategy } from './siwe-auth.strategy';
 
 @Module({
   imports: [
@@ -17,6 +19,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     TypeOrmModule.forFeature([User]),
   ],
-  providers: [UserService, JwtStrategy],
+  providers: [UserService, JwtStrategy, SiweService, SiweAuthStrategy],
 })
 export class AuthModule {}

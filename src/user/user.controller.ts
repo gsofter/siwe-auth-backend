@@ -18,6 +18,7 @@ import { ethers } from 'ethers';
 
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { JwtService } from '@nestjs/jwt';
+import { SiweAuthGuard } from 'src/auth/siwe-auth.guard';
 
 @Controller('user')
 export class UsersController {
@@ -37,40 +38,13 @@ export class UsersController {
   }
 
   @Post('/signup')
+  @UseGuards(SiweAuthGuard)
   async signup(@Request() req, @Res() res: Response) {
-    if (!req.body.message) {
-      return res
-        .status(422)
-        .json({ message: 'Expected prepareMessage object as body.' });
-    }
-
-    if (!req.body.signature) {
-      return res.status(422).json({ message: 'Expected signature as body.' });
-    }
-
-    if (!req.body.nonce) {
-      return res.status(422).json({ message: 'Expected nonce as body.' });
-    }
-
     if (!req.body.username || !req.body.eoaAddress) {
-      return res.status(400).json({ message: 'Missing required information.' });
+      return res.status(422).send('Missing required information');
     }
 
     try {
-      const parsedMessage = await this.siweService
-        .verifyMessage(req.body.message, req.body.signature, req.body.nonce)
-        .catch((e) => {
-          this.logger.error(e.message);
-          throw new Error('signature verification failed');
-        });
-
-      if (
-        ethers.getAddress(parsedMessage.address) !==
-        ethers.getAddress(req.body.eoaAddress)
-      ) {
-        return res.status(401).json({ message: 'Authentication failed.' });
-      }
-
       const newUserDto: UserDTO = {
         username: req.body.username,
         eoaAddress: ethers.getAddress(req.body.eoaAddress),
@@ -113,38 +87,11 @@ export class UsersController {
   }
 
   @Post('/signin')
+  @UseGuards(SiweAuthGuard)
   async signin(@Request() req, @Res() res: Response) {
-    if (!req.body.message) {
-      return res
-        .status(422)
-        .json({ message: 'Expected prepareMessage object as body.' });
-    }
-
-    if (!req.body.signature) {
-      return res.status(422).json({ message: 'Expected signature as body.' });
-    }
-
-    if (!req.body.eoaAddress) {
-      return res.status(422).json({ message: 'Missing required information.' });
-    }
-
     try {
-      const parsedMessage = await this.siweService
-        .verifyMessage(req.body.message, req.body.signature, req.body.nonce)
-        .catch((e) => {
-          console.log(e.message);
-          throw e;
-        });
-
-      if (
-        ethers.getAddress(parsedMessage.address) !==
-        ethers.getAddress(req.body.eoaAddress)
-      ) {
-        return res.status(401).json({ message: 'Authentication failed.' });
-      }
-
       const loggedUser = await this.userService.getOneByEOAAddress(
-        ethers.getAddress(req.body.eoaAddress),
+        ethers.getAddress(req.user.eoaAddress),
       );
 
       if (!loggedUser)
