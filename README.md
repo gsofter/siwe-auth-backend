@@ -6,6 +6,8 @@
 
 ![image](https://user-images.githubusercontent.com/49583931/235481235-dff67f58-0119-443b-af88-873ebd4cc1c5.png)
 
+Check architecture diagram [here](https://miro.com/app/board/uXjVMN_MOts=/?share_link_id=138060396113)
+
 ## Getting started
 
 ### Prerequisites
